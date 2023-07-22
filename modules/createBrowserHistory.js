@@ -71,6 +71,10 @@ function createBrowserHistory(props = {}) {
     return createLocation(path, state, key);
   }
 
+  /**
+   * 随机生成 key
+   * @returns 
+   */
   function createKey() {
     return Math.random()
       .toString(36)
@@ -79,6 +83,12 @@ function createBrowserHistory(props = {}) {
 
   const transitionManager = createTransitionManager();
 
+  /**
+   * 更新 history 数据
+   * 核心： Object.assign(history, nextState);
+   * 同时会通知监听
+   * @param {*} nextState 
+   */
   function setState(nextState) {
     Object.assign(history, nextState);
     history.length = globalHistory.length;
@@ -119,9 +129,15 @@ function createBrowserHistory(props = {}) {
     }
   }
 
+  /**
+   * 用于 回滚
+   * @param {*} fromLocation 
+   */
   function revertPop(fromLocation) {
     const toLocation = history.location;
 
+    // 我们可以通过保存我们在sessionStorage中看到的键列表来使它更可靠。
+    // 相反，对于我们不知道的键，我们只是默认为0。
     // TODO: We could probably make this more reliable by
     // keeping a list of keys we've seen in sessionStorage.
     // Instead, we just default to 0 for keys we don't know.
@@ -134,6 +150,9 @@ function createBrowserHistory(props = {}) {
 
     if (fromIndex === -1) fromIndex = 0;
 
+    // to - from 
+    // 这里的 from 应该是我们要去的导航
+    // to 才是我们当前导航
     const delta = toIndex - fromIndex;
 
     if (delta) {
@@ -262,6 +281,11 @@ function createBrowserHistory(props = {}) {
 
   let listenerCount = 0;
 
+  /**
+   * 监听的添加和移除
+   * @param {*} delta 1 or -1
+   * listenerCount 通过加 delta 代表当前是否还有 block 和 listen 正在监听
+   */
   function checkDOMListeners(delta) {
     listenerCount += delta;
 
@@ -280,6 +304,11 @@ function createBrowserHistory(props = {}) {
 
   let isBlocked = false;
 
+  /**
+   * block 就是 内部的 setPrompt 的调用
+   * @param {*} prompt 
+   * @returns 
+   */
   function block(prompt = false) {
     const unblock = transitionManager.setPrompt(prompt);
 
