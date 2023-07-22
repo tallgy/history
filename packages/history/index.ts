@@ -384,6 +384,10 @@ export function createBrowserHistory(
 
   let blockedPopTx: Transition | null = null;
   function handlePop() {
+    // TODO 
+    // 这里有个问题，为什么，要执行上一次留下来的 blockedPopTx 方法。
+    // 目前的认为是，因为我有 retry 方法，所以在 retry 之后，就会有这个方法执行。
+    // 但是，如果多个 block 都retry 貌似还是有问题？
     if (blockedPopTx) {
       blockers.call(blockedPopTx);
       blockedPopTx = null;
@@ -391,11 +395,17 @@ export function createBrowserHistory(
       let nextAction = Action.Pop;
       let [nextIndex, nextLocation] = getIndexAndLocation();
 
+      // 如果有 blocker 阻塞 路由的跳转。
       if (blockers.length) {
+        // 这个判断代表了 尝试的跳转是否是一个有效的索引
         if (nextIndex != null) {
+          // 计算两次跳转位置的下标处
           let delta = index - nextIndex;
           if (delta) {
             // Revert the POP
+            // blockedPopTx 方法 用的是 retry 要 *-1 因为，
+            // 执行 retry 代表执行跳转方法 所以需要用 *-1 指向位置
+            // eg：go(1) index(1) - nextIndex(2) = -1 所以 *-1 代表了 go(1)
             blockedPopTx = {
               action: nextAction,
               location: nextLocation,
@@ -404,9 +414,12 @@ export function createBrowserHistory(
               },
             };
 
+            // 代表了回退，因为有 blocker 被阻塞了 不能跳转
+            // 需要 call 方法回调去调用 retry 方法。
             go(delta);
           }
         } else {
+          // 尝试的跳转，到了一个没有索引的位置，所以无法有效的阻止导航
           // Trying to POP to a location with no index. We did not create
           // this location, so we can't effectively block the navigation.
           warning(
@@ -422,6 +435,9 @@ export function createBrowserHistory(
           );
         }
       } else {
+        // 否则，直接进行监听执行
+        // 这里有个问题，是 为什么 没有在 else 执行对应跳转，因为这个是 addEventListen 的监听
+        // 所以其实是已经默认会有跳转效果，所以不会有跳转
         applyTx(nextAction);
       }
     }
