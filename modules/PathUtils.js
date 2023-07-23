@@ -21,6 +21,11 @@ export function stripTrailingSlash(path) {
   return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
 }
 
+/**
+ * 生成 path，会用在 location 上面，返回 location 属性
+ * @param {*} path 
+ * @returns location = { pathname, search, hash}
+ */
 export function parsePath(path) {
   let pathname = path || '/';
   let search = '';
@@ -45,6 +50,11 @@ export function parsePath(path) {
   };
 }
 
+/**
+ * 创建path，会拼接 search hash 等
+ * @param {*} location 
+ * @returns string
+ */
 export function createPath(location) {
   const { pathname, search, hash } = location;
 
