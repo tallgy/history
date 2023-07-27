@@ -864,15 +864,21 @@ export type MemoryHistoryOptions = {
 };
 
 /**
+ * 内存历史记录将当前位置存储在内存中。
+ * 它是为在有状态的非浏览器环境中使用而设计的，比如测试和React Native。
  * Memory history stores the current location in memory. It is designed for use
  * in stateful non-browser environments like tests and React Native.
  *
+ * 通过 entries 数组 和 index 下标去处理 location 的存储问题
+ * 其他的逻辑都差不多。
+ * 
  * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#creatememoryhistory
  */
 export function createMemoryHistory(
   options: MemoryHistoryOptions = {}
 ): MemoryHistory {
   let { initialEntries = ["/"], initialIndex } = options;
+  /** entries 存储了 一个 history 的栈 */
   let entries: Location[] = initialEntries.map((entry) => {
     let location = readOnly<Location>({
       pathname: "/",
@@ -939,6 +945,7 @@ export function createMemoryHistory(
 
     warning(
       location.pathname.charAt(0) === "/",
+      // 在 memory history.push 中不支持相对路径名
       `Relative pathnames are not supported in memory history.push(${JSON.stringify(
         to
       )})`
@@ -946,6 +953,7 @@ export function createMemoryHistory(
 
     if (allowTx(nextAction, nextLocation, retry)) {
       index += 1;
+      // 切割后面的 history 栈，并将 nextLocation 添加进去
       entries.splice(index, entries.length, nextLocation);
       applyTx(nextAction, nextLocation);
     }
